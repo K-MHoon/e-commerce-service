@@ -19,8 +19,6 @@ processResources {
 }
 
 swaggerSources {
-	def typeMappings = 'URI=URI'
-	def importMappings = 'URI=java.net.URI'
 	shibaHolic {
 		def apiYaml = "${rootDir}/src/main/resources/api/openapi.yaml"
 		def configJson = "${rootDir}/src/main/resources/api/config.json"
@@ -29,10 +27,8 @@ swaggerSources {
 		code {
 			language = 'spring'
 			configFile = file(configJson)
-			rawOptions = ['--ignore-file-override', ignoreFile, '--type-mappings',
-						  typeMappings, '--import-mappings', importMappings] as List<String>
+			rawOptions = ['--ignore-file-override', ignoreFile] as List<String>
 			components = [models: true, apis: true, supportingFiles: 'ApiUtil.java']
-			dependsOn validation
 		}
 	}
 }
