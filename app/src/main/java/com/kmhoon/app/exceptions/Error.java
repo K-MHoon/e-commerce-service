@@ -2,6 +2,8 @@ package com.kmhoon.app.exceptions;
 
 import lombok.*;
 
+import java.time.Instant;
+
 /**
  * <p>에러 반환 Dto</p>
  * <p>해당 객체 속성들은 다음과 같이 작성한다.</p>
@@ -9,7 +11,8 @@ import lombok.*;
  * 2. message = 문제에 대한 간단하고 사람이 읽을 수 있는 요약 <br/>
  * 3. status = 문제 발생 시 기존 서버에 의해 설정된 HTTP 상태 코드 <br/>
  * 4. url = 오류를 발생시킨 요청의 URL <br/>
- * 5. reqMethod = 오류를 발생시킨 요청의 메서드
+ * 5. reqMethod = 오류를 발생시킨 요청의 메서드 <br/>
+ * 6. timestamp = 오류가 발생된 시간
  *
  */
 @Getter
@@ -25,4 +28,5 @@ public final class Error {
     private String url = "이용 불가합니다.";
     @Builder.Default
     private String reqMethod  = "이용 불가합니다.";
+    private Instant timeStamp;
 }
