@@ -2,9 +2,9 @@ package com.kmhoon.app.repository;
 
 import com.kmhoon.app.entity.OrderEntity;
 import com.kmhoon.app.model.NewOrder;
-
-import java.util.Optional;
+import reactor.core.publisher.Mono;
 
 public interface OrderRepositoryExt  {
-    Optional<OrderEntity> insert(NewOrder m);
+    Mono<OrderEntity> insert(Mono<NewOrder> m);
+    Mono<OrderEntity> updateMapping(OrderEntity orderEntity);
 }
