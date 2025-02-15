@@ -1,47 +1,43 @@
 package com.kmhoon.app.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
-@Entity
-@Table(name = "address")
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Builder
-public class AddressEntity {
+import lombok.*;
+import lombok.experimental.Accessors;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
+@Table("ecomm.address")
+@Getter
+@Setter
+@Accessors(chain = true)
+@ToString
+@Builder
+@NoArgsConstructor
+public class AddressEntity {
     @Id
-    @GeneratedValue
-    @Column(name = "ID", updatable = false, nullable = false)
+    @Column("id")
     private UUID id;
 
-    @Column(name = "NUMBER")
+    @Column("number")
     private String number;
 
-    @Column(name = "RESIDENCY")
+    @Column("residency")
     private String residency;
 
-    @Column(name = "STREET")
+    @Column("street")
     private String street;
 
-    @Column(name = "CITY")
+    @Column("city")
     private String city;
 
-    @Column(name = "STATE")
+    @Column("state")
     private String state;
 
-    @Column(name = "COUNTRY")
+    @Column("country")
     private String country;
 
-    @Column(name = "PINCODE")
+    @Column("pincode")
     private String pincode;
-
-    @OneToMany(mappedBy = "addressEntity", fetch = FetchType.LAZY, orphanRemoval = true)
-    @Builder.Default
-    private List<OrderEntity> orders = new ArrayList<>();
 }

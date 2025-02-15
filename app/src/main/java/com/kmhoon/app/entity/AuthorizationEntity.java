@@ -1,38 +1,39 @@
 
 package com.kmhoon.app.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.sql.Timestamp;
 import java.util.UUID;
 
-@Entity
-@Table(name = "authorization")
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
+
+@Table("ecomm.authorization")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Setter
+@Accessors(chain = true)
 @Builder
 public class AuthorizationEntity {
 
     @Id
-    @GeneratedValue
-    @Column(name = "ID", updatable = false, nullable = false)
+    @Column("id")
     private UUID id;
 
-    @Column(name="AUTHORIZED")
+    @Column("authorized")
     private boolean authorized;
 
-    @Column(name="TIME")
+    @Column("time")
     private Timestamp time;
 
-    @Column(name = "MESSAGE")
+    @Column("message")
     private String message;
 
-    @Column(name = "ERROR")
+    @Column("error")
     private String error;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "ORDER_ID", referencedColumnName = "id")
     private OrderEntity orderEntity;
 }
