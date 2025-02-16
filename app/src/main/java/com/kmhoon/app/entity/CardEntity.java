@@ -1,39 +1,39 @@
 package com.kmhoon.app.entity;
 
-import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.Accessors;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
-@Entity
-@Table(name = "card")
+@Table("ecomm.card")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Setter
+@Accessors(chain = true)
+@NoArgsConstructor
+@EqualsAndHashCode
+@ToString
 @Builder
 public class CardEntity {
-
     @Id
-    @GeneratedValue
-    @Column(name = "ID", updatable = false, nullable = false)
+    @Column("id")
     private UUID id;
 
-    @Column(name = "NUMBER")
+    @Column("number")
     private String number;
 
-    @Column(name = "EXPIRES")
+    @Column("expires")
     private String expires;
 
-    @Column(name = "CVV")
+    @Column("cvv")
     private String cvv;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "USER_ID", referencedColumnName = "ID")
+    @Column("user_id")
+    private UUID userId;
+
     private UserEntity user;
 
-    @OneToMany(mappedBy = "cardEntity", fetch = FetchType.LAZY, orphanRemoval = true)
-    @Builder.Default
-    private List<OrderEntity> orders = new ArrayList<>();
+    private OrderEntity orderEntity;
 }
