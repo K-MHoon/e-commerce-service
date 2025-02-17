@@ -1,67 +1,67 @@
 package com.kmhoon.app.entity;
 
 import com.kmhoon.app.model.Order.StatusEnum;
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
-@Entity
-@Table(name = "orders")
+import lombok.*;
+import lombok.experimental.Accessors;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
+
+@Table("ecomm.orders")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Setter
+@Accessors(chain = true)
+@NoArgsConstructor
+@EqualsAndHashCode
 @Builder
+@ToString
 public class OrderEntity {
 
     @Id
-    @GeneratedValue
-    @Column(name = "ID", updatable = false, nullable = false)
+    @Column("id")
     private UUID id;
 
-    @Column(name = "TOTAL")
-    private BigDecimal total;
+    @Column("customer_id")
+    private UUID customerId;
 
-    @Column(name = "STATUS")
-    @Enumerated(EnumType.STRING)
-    private StatusEnum status;
+    @Column("address_id")
+    private UUID addressId;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name="CUSTOMER_ID", nullable=false)
-    private UserEntity userEntity;
+    @Column("card_id")
+    private UUID cardId;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "ADDRESS_ID", referencedColumnName = "ID", insertable=false, updatable=false)
-    private AddressEntity addressEntity;
-
-    @OneToOne(cascade = CascadeType.ALL )
-    @JoinColumn(name = "PAYMENT_ID", referencedColumnName = "ID")
-    private PaymentEntity paymentEntity;
-
-    @JoinColumn(name = "SHIPMENT_ID", referencedColumnName = "ID")
-    @OneToOne
-    private ShipmentEntity shipment;
-
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "CARD_ID", referencedColumnName = "ID")
-    private CardEntity cardEntity;
-
-    @Column(name = "ORDER_DATE")
+    @Column("order_date")
     private Timestamp orderDate;
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "ORDER_ITEM",
-            joinColumns = @JoinColumn(name = "ORDER_ID"),
-            inverseJoinColumns = @JoinColumn(name = "ITEM_ID")
-    )
-    @Builder.Default
+    @Column("total")
+    private BigDecimal total;
+
+    @Column("payment_id")
+    private UUID paymentId;
+
+    @Column("shipment_id")
+    private UUID shipmentId;
+
+    @Column("status")
+    private StatusEnum status;
+
+    private UUID cartId;
+
+    private UserEntity userEntity;
+
+    private AddressEntity addressEntity;
+
+    private PaymentEntity paymentEntity;
+
+    private List<ShipmentEntity> shipments = new ArrayList<>();
+
+    private CardEntity cardEntity;
+
     private List<ItemEntity> items = new ArrayList<>();
 
-    @OneToOne(mappedBy = "orderEntity")
     private AuthorizationEntity authorizationEntity;
 }

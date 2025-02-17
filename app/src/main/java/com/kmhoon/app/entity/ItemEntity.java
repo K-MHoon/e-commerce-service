@@ -1,50 +1,35 @@
 package com.kmhoon.app.entity;
 
-import com.kmhoon.app.model.Item;
-import jakarta.persistence.*;
-import lombok.*;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
-@Entity
-@Table(name = "item")
+@Table("ecomm.item")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Setter
+@Accessors(chain = true)
+@EqualsAndHashCode
 @Builder
 public class ItemEntity {
 
     @Id
-    @GeneratedValue
-    @Column(name = "ID", updatable = false, nullable = false)
+    @Column("id")
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "PRODUCT_ID", referencedColumnName = "ID")
-    private ProductEntity product;
+    @Column("product_id")
+    private UUID productId;
 
-    @Column(name = "UNIT_PRICE")
+    @Column("unit_price")
     private BigDecimal price;
 
-    @Column(name = "QUANTITY")
-    private Integer quantity;
-
-    @ManyToMany(mappedBy = "items", fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<CartEntity> cart = new ArrayList<>();
-
-    @ManyToMany(mappedBy = "items", fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<OrderEntity> orders = new ArrayList<>();
-
-    public void updateQuantity(Integer quantity) {
-        this.quantity = quantity;
-    }
-
-    public void updatePrice(BigDecimal unitPrice) {
-        this.price = unitPrice;
-    }
+    @Column("quantity")
+    private int quantity;
 }
