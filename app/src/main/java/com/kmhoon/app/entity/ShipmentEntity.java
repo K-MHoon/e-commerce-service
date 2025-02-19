@@ -1,29 +1,29 @@
 package com.kmhoon.app.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
-@Entity
-@Table(name = "shipment")
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
+
+@Table("ecomm.shipment")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Setter
+@Accessors(chain = true)
 @Builder
 public class ShipmentEntity {
-
     @Id
-    @GeneratedValue
-    @Column(name = "ID", updatable = false, nullable = false)
+    @Column("id")
     private UUID id;
 
-    @Column(name = "EST_DELIVERY_DATE")
+    @Column("est_delivery_date")
     private Timestamp estDeliveryDate;
 
-    @Column(name = "CARRIER")
+    @Column("carrier")
     private String carrier;
 }

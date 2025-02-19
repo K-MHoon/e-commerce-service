@@ -1,53 +1,62 @@
 package com.kmhoon.app.entity;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Entity
-@Table(name = "product")
+@Table("ecomm.product")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Setter
+@Accessors(chain = true)
+@NoArgsConstructor
 @Builder
 public class ProductEntity {
 
     @Id
-    @GeneratedValue
-    @Column(name = "ID", updatable = false, nullable = false)
+    @Column("id")
     private UUID id;
 
     @NotNull(message = "Product name is required.")
-    @Basic(optional = false)
-    @Column(name = "NAME")
+    @Column("name")
     private String name;
 
-    @Column(name = "DESCRIPTION")
+    @Column("description")
     private String description;
 
-    @Column(name = "PRICE")
+    @Column("price")
     private BigDecimal price;
 
-    @Column(name = "COUNT")
+    @Column("count")
+
     private int count;
 
-    @Column(name = "IMAGE_URL")
+    @Column("image_url")
     private String imageUrl;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "PRODUCT_TAG",
-            joinColumns = @JoinColumn(name = "PRODUCT_ID"),
-            inverseJoinColumns = @JoinColumn(name = "TAG_ID")
-    )
-    @Builder.Default
+    @Transient
     private List<TagEntity> tags = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product")
-    private List<ItemEntity> items;
+    private ItemEntity item;
+
+    public ProductEntity(UUID id, @NotNull(message = "Product name is required.") String name,
+                         String description, BigDecimal price, int count, String imageUrl) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.description = description;
+        this.count = count;
+        this.imageUrl = imageUrl;
+    }
 }
