@@ -1,46 +1,72 @@
 package com.kmhoon.app.hateoas;
 
-import com.kmhoon.app.controllers.CartController;
 import com.kmhoon.app.entity.CartEntity;
+import com.kmhoon.app.entity.ItemEntity;
 import com.kmhoon.app.model.Cart;
+import com.kmhoon.app.model.Item;
 import com.kmhoon.app.service.ItemService;
-import org.springframework.beans.BeanUtils;
-import org.springframework.hateoas.server.mvc.RepresentationModelAssemblerSupport;
+import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.server.reactive.ReactiveRepresentationModelAssembler;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.StreamSupport;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Component
-public class CartRepresentationModelAssembler extends RepresentationModelAssemblerSupport<CartEntity, Cart> {
+@RequiredArgsConstructor
+public class CartRepresentationModelAssembler implements ReactiveRepresentationModelAssembler<CartEntity, Cart>, HateoasSupport {
 
+    private static String serverUri = null;
     private final ItemService itemService;
 
-    public CartRepresentationModelAssembler(ItemService itemService) {
-        super(CartController.class, Cart.class);
-        this.itemService = itemService;
+    private String getServerUri(@Nullable ServerWebExchange exchange) {
+        if(Strings.isBlank(serverUri)) {
+            serverUri = getUriComponentsBuilder(exchange).toString();
+        }
+        return serverUri;
     }
 
     @Override
-    public Cart toModel(CartEntity entity) {
-        String uid = Objects.isNull(entity.getUser()) ? null : entity.getUser().getId().toString();
-        String cid = Objects.isNull(entity.getId()) ? null : entity.getId().toString();
-        Cart cart = new Cart();
-        BeanUtils.copyProperties(entity, cart);
-        cart.id(cid).customerId(uid).items(itemService.toModelList(entity.getItems()));
-        cart.add(linkTo(methodOn(CartController.class).getCartByCustomerId(uid)).withSelfRel());
-        cart.add(linkTo(methodOn(CartController.class).getCartItemsByCustomerId(uid)).withRel("cart-items"));
-        return cart;
+    public Mono<Cart> toModel(CartEntity entity, ServerWebExchange exchange) {
+        return Mono.just(entityToModel(entity, exchange));
     }
 
-    public List<Cart> toListModel(Iterable<CartEntity> entities) {
-        if(Objects.isNull(entities)) {
-            return List.of();
+    public Cart entityToModel(CartEntity entity, ServerWebExchange exchange) {
+        Cart resource = new Cart();
+        if(Objects.isNull(entity)) {
+            return resource;
         }
-        return StreamSupport.stream(entities.spliterator(), false).map(this::toModel).toList();
+        resource.id(entity.getId().toString()).customerId(entity.getUser().getId().toString()).items(itemFromEntities(entity.getItems()));
+        String serverUri = getServerUri(exchange);
+        resource.add(Link.of(String.format("%s/api/v1/carts/%s", serverUri, entity.getId())).withSelfRel());
+        return resource;
+    }
+
+    public List<Item> itemFromEntities(List<ItemEntity> items) {
+        return items.stream().map(i -> new Item().id(i.getProductId().toString()).unitPrice(i.getPrice()).quantity(i.getQuantity())).toList();
+    }
+
+    public Cart monoToModel(Mono<CartEntity> mEntity, ServerWebExchange exchange) {
+        return getModel(mEntity.map(e -> entityToModel(e, exchange)));
+    }
+
+    public Cart getModel(Mono<Cart> m) {
+        AtomicReference<Cart> model = new AtomicReference<>();
+        m.cache().subscribe(model::set);
+        return model.get();
+    }
+
+    public Flux<Cart> toListModel(Flux<CartEntity> entities, ServerWebExchange exchange) {
+        if(Objects.isNull(entities)) {
+            return Flux.empty();
+        }
+        return Flux.from(entities.map(e -> entityToModel(e, exchange)));
     }
 }
