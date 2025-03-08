@@ -1,57 +1,67 @@
 package com.kmhoon.app.hateoas;
 
-import com.kmhoon.app.controllers.OrderController;
 import com.kmhoon.app.entity.OrderEntity;
 import com.kmhoon.app.model.Order;
 import com.kmhoon.app.service.ItemService;
+import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.BeanUtils;
-import org.springframework.hateoas.server.mvc.RepresentationModelAssemblerSupport;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.server.reactive.ReactiveRepresentationModelAssembler;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.StreamSupport;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @Component
-public class OrderRepresentationModelAssembler extends RepresentationModelAssemblerSupport<OrderEntity, Order> {
+@RequiredArgsConstructor
+public class OrderRepresentationModelAssembler implements ReactiveRepresentationModelAssembler<OrderEntity, Order>, HateoasSupport {
 
-    private final UserRepresentationModelAssembler userRepresentationModelAssembler;
-    private final AddressRepresentationModelAssembler addressRepresentationModelAssembler;
-    private final CardRepresentationModelAssembler cardRepresentationModelAssembler;
-    private final ShipmentRepresentationModelAssembler shipmentRepresentationModelAssembler;
-    private final ItemService itemService;
+    private static String serverUri = null;
+    private final UserRepresentationModelAssembler uAssembler;
+    private final AddressRepresentationModelAssembler aAssembler;
+    private final CardRepresentationModelAssembler cAssembler;
+    private final ShipmentRepresentationModelAssembler sAssembler;
+    private ItemService itemService;
 
-    public OrderRepresentationModelAssembler(UserRepresentationModelAssembler userRepresentationModelAssembler, AddressRepresentationModelAssembler addressRepresentationModelAssembler, CardRepresentationModelAssembler cardRepresentationModelAssembler, ShipmentRepresentationModelAssembler shipmentRepresentationModelAssembler, ItemService itemService) {
-        super(OrderController.class, Order.class);
-        this.userRepresentationModelAssembler = userRepresentationModelAssembler;
-        this.addressRepresentationModelAssembler = addressRepresentationModelAssembler;
-        this.cardRepresentationModelAssembler = cardRepresentationModelAssembler;
-        this.shipmentRepresentationModelAssembler = shipmentRepresentationModelAssembler;
-        this.itemService = itemService;
+    private String getServerUri(@Nullable ServerWebExchange exchange) {
+        if(Strings.isBlank(serverUri)) {
+            serverUri = getUriComponentsBuilder(exchange).toUriString();
+        }
+        return serverUri;
     }
 
     @Override
-    public Order toModel(OrderEntity entity) {
-        Order resource = createModelWithId(entity.getId(), entity);
-        BeanUtils.copyProperties(entity, resource);
-        resource.id(entity.getId().toString())
-                .customer(userRepresentationModelAssembler.toModel(entity.getUserEntity()))
-                .address(addressRepresentationModelAssembler.toModel(entity.getAddressEntity()))
-                .card(cardRepresentationModelAssembler.toModel(entity.getCardEntity()))
-                .items(itemService.toModelList(entity.getItems()))
-                .date(entity.getOrderDate().toInstant().atOffset(ZoneOffset.UTC));
-
-        return resource.add(linkTo(methodOn(OrderController.class).getByOrderId(entity.getId().toString())).withSelfRel());
+    public Mono<Order> toModel(OrderEntity entity, ServerWebExchange exchange) {
+        return null;
     }
 
-    public List<Order> toListModel(Iterable<OrderEntity> entities) {
-        if(Objects.isNull(entities)) {
-            return List.of();
+    public Order entityToModel(OrderEntity entity, ServerWebExchange exchange) {
+        Order resource = new Order();
+        if(Objects.isNull(entity)) {
+            return resource;
         }
-        return StreamSupport.stream(entities.spliterator(), false).map(this::toModel).toList();
+        BeanUtils.copyProperties(entity, resource);
+        resource.id(entity.getId().toString())
+                .customer(uAssembler.entityToModel(entity.getUserEntity(), exchange))
+                .address(aAssembler.entityToModel(entity.getAddressEntity(), exchange))
+                .card(cAssembler.entityToModel(entity.getCardEntity(), exchange))
+                .items(itemService.toModelList(entity.getItems()))
+                .date(entity.getOrderDate().toInstant().atOffset(ZoneOffset.UTC));
+        String serverUri = getServerUri(exchange);
+        resource.add(Link.of(String.format("%s/api/v/orders", serverUri)).withRel("orders"));
+        resource.add(Link.of(String.format("%s/api/v/orders/%s", serverUri, entity.getId())).withSelfRel());
+        return resource;
+    }
+
+    public Flux<Order> toListModel(Flux<OrderEntity> entities, ServerWebExchange exchange) {
+        if(Objects.isNull(entities)) {
+            return Flux.empty();
+        }
+        return Flux.from(entities.map(e -> entityToModel(e, exchange)));
     }
 }
