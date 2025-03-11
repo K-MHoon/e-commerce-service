@@ -5,9 +5,16 @@ import com.kmhoon.app.entity.ProductEntity;
 import com.kmhoon.app.entity.ShipmentEntity;
 import com.kmhoon.app.model.Product;
 import com.kmhoon.app.model.Shipment;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.BeanUtils;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.RepresentationModelAssemblerSupport;
+import org.springframework.hateoas.server.reactive.ReactiveRepresentationModelAssembler;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Objects;
@@ -18,23 +25,37 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @Component
-public class ShipmentRepresentationModelAssembler extends RepresentationModelAssemblerSupport<ShipmentEntity, Shipment> {
+public class ShipmentRepresentationModelAssembler implements ReactiveRepresentationModelAssembler<ShipmentEntity, Shipment>, HateoasSupport {
 
-    public ShipmentRepresentationModelAssembler() {
-        super(ShipmentController.class, Shipment.class);
+    private static String serverUri = null;
+
+    private String getServerUri(@Nullable ServerWebExchange exchange) {
+        if(Strings.isBlank(serverUri)) {
+            serverUri = getUriComponentsBuilder(exchange).toUriString();
+        }
+        return serverUri;
     }
 
     @Override
-    public Shipment toModel(ShipmentEntity entity) {
-        Shipment resource = createModelWithId(entity.getId(), entity);
-        BeanUtils.copyProperties(entity, resource);
-        resource.setId(entity.getId().toString());
-
-        return resource.add(linkTo(methodOn(ShipmentController.class).getShipmentByOrderId(entity.getId().toString())).withRel("byOrderId"));
+    public Mono<Shipment> toModel(ShipmentEntity entity, ServerWebExchange exchange) {
+        return Mono.just(entityToModel(entity, exchange));
     }
 
-    public List<Shipment> toListModel(Iterable<ShipmentEntity> entities) {
-        if (Objects.isNull(entities)) return List.of();
-        return StreamSupport.stream(entities.spliterator(), false).map(this::toModel).toList();
+    public Shipment entityToModel(ShipmentEntity entity, ServerWebExchange exchange) {
+        Shipment resource = new Shipment();
+        if(Objects.isNull(entity)) {
+            return resource;
+        }
+        BeanUtils.copyProperties(entity, resource);
+        String serverUri = getServerUri(exchange);
+        resource.add(Link.of(String.format("%s/api/v1/shipping/%s", serverUri, entity.getId())).withSelfRel());
+        return resource;
+    }
+
+    public Flux<Shipment> toListModel(Flux<ShipmentEntity> entities, ServerWebExchange exchange) {
+        if(Objects.isNull(entities)) {
+            return Flux.empty();
+        }
+        return Flux.from(entities.map(e -> entityToModel(e, exchange)));
     }
 }
