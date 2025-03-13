@@ -5,8 +5,11 @@ import com.kmhoon.app.model.AddAddressReq;
 import com.kmhoon.app.model.Address;
 import com.kmhoon.app.repository.AddressRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -17,35 +20,35 @@ public class AddressService {
 
     private final AddressRepository addressRepository;
 
-    @Transactional
-    public Optional<AddressEntity> createAddress(AddAddressReq addAddressReq) {
-        return Optional.of(addressRepository.save(toEntity(addAddressReq)));
+    public Mono<AddressEntity> createAddress(Mono<AddAddressReq> addAddressReq) {
+        return addAddressReq.map(this::toEntity).flatMap(addressRepository::save);
     }
 
-    @Transactional
-    public void deleteAddressesById(String id) {
-        addressRepository.deleteById(UUID.fromString(id));
+    public Mono<Void> deleteAddressesById(String id) {
+        return deleteAddressesById(UUID.fromString(id));
     }
 
-    @Transactional(readOnly = true)
-    public Optional<AddressEntity> getAddressesById(String id) {
+    public Mono<Void> deleteAddressesById(UUID id) {
+        return addressRepository.deleteById(id).then();
+    }
+
+    public Mono<AddressEntity> getAddressesById(String id) {
         return addressRepository.findById(UUID.fromString(id));
     }
 
-    @Transactional(readOnly = true)
-    public Iterable<AddressEntity> getAllAddresses() {
+    public Flux<AddressEntity> getAllAddresses() {
         return addressRepository.findAll();
     }
 
     private AddressEntity toEntity(AddAddressReq model) {
-        return AddressEntity.builder()
-                .number(model.getNumber())
-                .residency(model.getResidency())
-                .street(model.getStreet())
-                .city(model.getCity())
-                .state(model.getState())
-                .country(model.getCountry())
-                .pincode(model.getPincode())
-                .build();
+        AddressEntity entity = new AddressEntity();
+        BeanUtils.copyProperties(model, entity);
+        return entity;
+    }
+
+    private AddressEntity toEntity(Mono<AddAddressReq> monoModel) {
+        AddressEntity entity = new AddressEntity();
+        monoModel.cache().subscribe(model -> BeanUtils.copyProperties(model, entity));
+        return entity;
     }
 }
