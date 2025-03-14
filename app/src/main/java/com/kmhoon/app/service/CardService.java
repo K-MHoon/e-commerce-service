@@ -7,8 +7,10 @@ import com.kmhoon.app.repository.CardRepository;
 import com.kmhoon.app.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -20,33 +22,31 @@ public class CardService {
     private final CardRepository cardRepository;
     private final UserRepository userRepository;
 
-    @Transactional
-    public void deleteCardById(String id) {
-        cardRepository.deleteById(UUID.fromString(id));
+    public Mono<Void> deleteCardById(String id) {
+        return deleteCardById(UUID.fromString(id));
     }
 
-    @Transactional(readOnly = true)
-    public Iterable<CardEntity> getAllCards() {
+    public Mono<Void> deleteCardById(UUID id) {
+        return cardRepository.deleteById(id);
+    }
+
+    public Flux<CardEntity> getAllCards() {
         return cardRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
-    public Optional<CardEntity> getCardById(String id) {
+    public Mono<CardEntity> getCardById(String id) {
         return cardRepository.findById(UUID.fromString(id));
     }
 
-    @Transactional
-    public Optional<CardEntity> registerCard(@Valid AddCardReq addCardReq) {
-        return Optional.of(cardRepository.save(toEntity(addCardReq)));
+    public Mono<CardEntity> registerCard(Mono<AddCardReq> addCardReq) {
+        return addCardReq.map(this::toEntity).flatMap(cardRepository::save);
     }
 
-    private CardEntity toEntity(AddCardReq m) {
-        Optional<UserEntity> user = userRepository.findById(UUID.fromString(m.getUserId()));
-        return CardEntity.builder()
-                .user(user.orElse(null))
-                .number(m.getCardNumber())
-                .cvv(m.getCvv())
-                .expires(m.getExpires())
-                .build();
+    private CardEntity toEntity(AddCardReq model) {
+        CardEntity cardEntity = new CardEntity();
+        BeanUtils.copyProperties(model, cardEntity);
+        cardEntity.setNumber(model.getCardNumber());
+        cardEntity.setUserId(UUID.fromString(model.getUserId()));
+        return cardEntity;
     }
 }
