@@ -6,9 +6,9 @@ import com.kmhoon.app.entity.UserEntity;
 import com.kmhoon.app.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -17,28 +17,27 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    @Transactional
-    public void deleteCustomerById(String id) {
-        userRepository.deleteById(UUID.fromString(id));
+    public Mono<Void> deleteCustomerById(String id) {
+        return deleteCustomerById(UUID.fromString(id));
     }
 
-    @Transactional(readOnly = true)
-    public Optional<Iterable<AddressEntity>> getAddressesByCustomerId(String id) {
-        return userRepository.findById(UUID.fromString(id)).map(UserEntity::getAddresses);
+    public Mono<Void> deleteCustomerById(UUID id) {
+        return userRepository.deleteById(id).then();
     }
 
-    @Transactional(readOnly = true)
-    public Iterable<UserEntity> getAllCustomers() {
+    public Flux<AddressEntity> getAddressesByCustomerId(String id) {
+        return userRepository.getAddressesByCustomerId(UUID.fromString(id));
+    }
+
+    public Flux<UserEntity> getAllCustomers() {
         return userRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
-    public Optional<CardEntity> getCardByCustomerId(String id) {
-        return Optional.of(userRepository.findById(UUID.fromString(id)).map(UserEntity::getCards).get().get(0));
+    public Mono<CardEntity> getCardByCustomerId(String id) {
+        return userRepository.findCardByCustomerId(UUID.fromString(id));
     }
 
-    @Transactional(readOnly = true)
-    public Optional<UserEntity> getCustomerById(String id) {
+    public Mono<UserEntity> getCustomerById(String id) {
         return userRepository.findById(UUID.fromString(id));
     }
 }
