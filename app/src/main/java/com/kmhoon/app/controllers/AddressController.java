@@ -10,8 +10,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
+import static org.springframework.http.ResponseEntity.*;
 
 @RestController
 @Slf4j
@@ -22,27 +25,27 @@ public class AddressController implements AddressApi {
     private final AddressRepresentationModelAssembler assembler;
 
     @Override
-    public ResponseEntity<Address> createAddress(AddAddressReq addAddressReq) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(addressService.createAddress(addAddressReq).map(assembler::toModel).get());
+    public Mono<ResponseEntity<Address>> createAddress(Mono<AddAddressReq> addAddressReq, ServerWebExchange exchange) throws Exception {
+        return addressService.createAddress(addAddressReq)
+                .map(a -> assembler.entityToModel(a, exchange)).map(e -> status(HttpStatus.CREATED).body(e));
     }
 
     @Override
-    public ResponseEntity<Void> deleteAddressesById(String id) {
-        addressService.deleteAddressesById(id);
-        return ResponseEntity.accepted().build();
-    }
-
-    @Override
-    public ResponseEntity<Address> getAddressesById(String id) {
+    public Mono<ResponseEntity<Void>> deleteAddressesById(String id, ServerWebExchange exchange) throws Exception {
         return addressService.getAddressesById(id)
-                .map(assembler::toModel)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .flatMap(a -> addressService.deleteAddressesById(a.getId()).then(Mono.just(status(HttpStatus.ACCEPTED).<Void>build())))
+                .switchIfEmpty(Mono.just(notFound().build()));
     }
 
     @Override
-    public ResponseEntity<List<Address>> getAllAddresses() {
-        return ResponseEntity.ok(assembler.toListModel(addressService.getAllAddresses()));
+    public Mono<ResponseEntity<Address>> getAddressesById(String id, ServerWebExchange exchange) throws Exception {
+        return addressService.getAddressesById(id).map(a -> assembler.entityToModel(a, exchange))
+                .map(ResponseEntity::ok).defaultIfEmpty(notFound().build());
     }
+
+    @Override
+    public Mono<ResponseEntity<Flux<Address>>> getAllAddresses(ServerWebExchange exchange) throws Exception {
+        return Mono.just(ok(assembler.toListModel(addressService.getAllAddresses(), exchange)));
+    }
+
 }
