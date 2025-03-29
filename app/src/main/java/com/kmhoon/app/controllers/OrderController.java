@@ -26,26 +26,26 @@ public class OrderController implements OrderApi {
     private final OrderService service;
 
 
-    @Override
-    public ResponseEntity<Order> addOrder(NewOrder newOrder) {
-        return service.addOrder(newOrder)
-                .map(assembler::toModel)
-                .map(ResponseEntity::ok)
-                .orElse(notFound().build());
-    }
-
-    @Override
-    public ResponseEntity<List<Order>> getOrdersByCustomerId(String customerId) {
-        return ok(assembler.toListModel(service.getOrdersByCustomerId(customerId)));
-    }
-
-    @Override
-    public ResponseEntity<Order> getByOrderId(String id) {
-        return service.getByOrderId(id)
-                .map(assembler::toModel)
-                .map(ResponseEntity::ok)
-                .orElse(notFound().build());
-    }
+//    @Override
+//    public ResponseEntity<Order> addOrder(NewOrder newOrder) {
+//        return service.addOrder(newOrder)
+//                .map(assembler::toModel)
+//                .map(ResponseEntity::ok)
+//                .orElse(notFound().build());
+//    }
+//
+//    @Override
+//    public ResponseEntity<List<Order>> getOrdersByCustomerId(String customerId) {
+//        return ok(assembler.toListModel(service.getOrdersByCustomerId(customerId)));
+//    }
+//
+//    @Override
+//    public ResponseEntity<Order> getByOrderId(String id) {
+//        return service.getByOrderId(id)
+//                .map(assembler::toModel)
+//                .map(ResponseEntity::ok)
+//                .orElse(notFound().build());
+//    }
 
 
 }
