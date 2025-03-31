@@ -22,13 +22,13 @@ public class PaymentController implements PaymentApi {
     private final PaymentRepresentationModelAssembler assembler;
 
 
-    @Override
-    public ResponseEntity<Authorization> authorize(PaymentReq paymentReq) {
-        return null;
-    }
-
-    @Override
-    public ResponseEntity<Authorization> getOrdersPaymentAuthorization(String orderId) {
-        return null;
-    }
+//    @Override
+//    public ResponseEntity<Authorization> authorize(PaymentReq paymentReq) {
+//        return null;
+//    }
+//
+//    @Override
+//    public ResponseEntity<Authorization> getOrdersPaymentAuthorization(String orderId) {
+//        return null;
+//    }
 }
