@@ -23,16 +23,16 @@ public class ProductController implements ProductApi {
     private final ProductService productService;
     private final ProductRepresentationModelAssembler assembler;
 
-    @Override
-    public ResponseEntity<Product> getProduct(String id) {
-        return productService.getProduct(id)
-                .map(assembler::toModel)
-                .map(ResponseEntity::ok)
-                .orElse(notFound().build());
-    }
-
-    @Override
-    public ResponseEntity<List<Product>> queryProducts(String tag, String name, Integer page, Integer size) {
-        return ok(assembler.toListModel(productService.getAllProducts()));
-    }
+//    @Override
+//    public ResponseEntity<Product> getProduct(String id) {
+//        return productService.getProduct(id)
+//                .map(assembler::toModel)
+//                .map(ResponseEntity::ok)
+//                .orElse(notFound().build());
+//    }
+//
+//    @Override
+//    public ResponseEntity<List<Product>> queryProducts(String tag, String name, Integer page, Integer size) {
+//        return ok(assembler.toListModel(productService.getAllProducts()));
+//    }
 }
