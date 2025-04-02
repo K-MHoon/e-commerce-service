@@ -21,8 +21,8 @@ public class ShipmentController implements ShipmentApi {
     private final ShipmentService service;
     private final ShipmentRepresentationModelAssembler assembler;
 
-    @Override
-    public ResponseEntity<List<Shipment>> getShipmentByOrderId(String id) {
-        return ResponseEntity.ok(assembler.toListModel(service.getShipmentByOrderId(id)));
-    }
+//    @Override
+//    public ResponseEntity<List<Shipment>> getShipmentByOrderId(String id) {
+//        return ResponseEntity.ok(assembler.toListModel(service.getShipmentByOrderId(id)));
+//    }
 }
